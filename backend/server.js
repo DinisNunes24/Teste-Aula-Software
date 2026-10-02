@@ -29,7 +29,7 @@ if (sort){
     }
     const orderDir=(order&&order.toLowerCase()==='desc')? -1:1;
     result.sort((a, b)=>{
-        if(a[sort]>b[sort])return -1*orderDir;
+        if(a[sort]<b[sort])return -1*orderDir;
         if(a[sort]>b[sort])return 1*orderDir;
         return 0;
     });
@@ -96,13 +96,14 @@ app.put('/api/items/:id', (req, res) => {
     const id = Number(req.params.id);
 
     if(!Number.isInteger(id)||id<=0){
-        return res.status(404).json({ error: 'Id inválido' });
+        return res.status(400).json({ error: 'Id inválido' });
     }
+    const item = items.find(item=>item.id===id);
     if(!item){
         return res.status(404).json({error:'Item não encontrado'});
     }
     const {name } = req.body||{};
-    if (typeof name !=='string'||name-trim()==='') {
+    if (typeof name !=='string'||name.trim()==='') {
     return res.status(400).json({
          error: 'O campo name é obrigatório' });
   }
