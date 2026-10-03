@@ -20,48 +20,49 @@ app.get('/api/items', (req, res) => {
         const term = name.trim().toLowerCase();
         result=result.filter(item=>
             item.name.toLowerCase().includes(term)
-        )
+        );
     }
 
-if (sort){
-    if(sort!=='id' && sort!=='name'){
-        return res.status(400).json({error:'Parâmetro sort inválido. Utilize "id" ou "name"'});
+    if (sort){
+        if(sort!=='id' && sort!=='name'){
+            return res.status(400).json({error:'Parâmetro sort inválido. Utilize "id" ou "name"'});
+        }
+        const orderDir=(order&&order.toLowerCase()==='desc')? -1:1;
+        result.sort((a, b)=>{
+            if(a[sort]<b[sort])return -1*orderDir;
+            if(a[sort]>b[sort])return 1*orderDir;
+            return 0;
+        });
     }
-    const orderDir=(order&&order.toLowerCase()==='desc')? -1:1;
-    result.sort((a, b)=>{
-        if(a[sort]<b[sort])return -1*orderDir;
-        if(a[sort]>b[sort])return 1*orderDir;
-        return 0;
-    });
-}
 
-if (page!=undefined || limit !==undefined){
-    const pageNum=Number(page||1);
-    const limitNum=Number(limit||10);
+    if (page!=undefined || limit !==undefined){
+        const pageNum=Number(page||1);
+        const limitNum=Number(limit||10);
 
-    if(!Number.isInteger(pageNum)||pageNum<1||
-    !Number.isInteger(limitNum)|| limitNum<1){
-        return res.status(400).json({error: 'Parâmetros de paginação inválidos. Use integers'})
+        if(!Number.isInteger(pageNum)||pageNum<1||
+        !Number.isInteger(limitNum)|| limitNum<1){
+            return res.status(400).json({error: 'Parâmetros de paginação inválidos. Use integers'})
+        }
+        const total=result.length;
+        const startIndex=(pageNum-1)*limitNum;
+        const paginatedItems=result.slice(startIndex, startIndex+limitNum);
+
+        return res.status(200).json({
+            page: pageNum,
+            limit: limitNum,
+            total,
+            items: paginatedItems
+        });
     }
-    const total=result.length;
-    const startIndex=(pageNum-1)*limitNum;
-    const paginatedItems=result.slice(startIndex, startIndex+limitNum);
-
-    return res.status(200).json({
-        page: pageNum,
-        limit: limitNum,
-        total,
-        items: paginatedItems
-    });
-}
 
     res.status(200).json(result);
 });
 
+
 app.get(`/api/items/:id`, (req, res) => {
     const id = Number(req.params.id);
 
-    if(!Number.isInteger(id)||id<=0){
+    if(!Number.isInteger(id)||id<=0||String(id) !== req.params.id){
         return res.status(400).json({
             error: 'id inválido'
         });
@@ -77,7 +78,7 @@ app.get(`/api/items/:id`, (req, res) => {
 });
 
 app.post('/api/items', (req, res) => {
-    const { name} = req.body;
+    const { name} = req.body||{};
 
     if(typeof name!=='string'||name.trim()===''){
         return res.status(400).json({ error: 'O campo name é obrigatório'});
@@ -89,13 +90,13 @@ app.post('/api/items', (req, res) => {
     };
     items.push(newItem);
 
-    res.status(201).json(newItem);
+    res.status(201).location(`/api/items/${newItem.id}`).json(newItem);
 })
 
 app.put('/api/items/:id', (req, res) => {
     const id = Number(req.params.id);
 
-    if(!Number.isInteger(id)||id<=0){
+    if(!Number.isInteger(id)||id<=0||String(id) !== req.params.id){
         return res.status(400).json({ error: 'Id inválido' });
     }
     const item = items.find(item=>item.id===id);
@@ -113,8 +114,9 @@ app.put('/api/items/:id', (req, res) => {
 });
 app.delete('/api/items/:id', (req,res) => {
     const id = Number(req.params.id);
-    if(!Number.isInteger(id)||id<=0){
-        return res.status(400).json({error:'id inválido'});
+
+    if(!Number.isInteger(id)||id<=0||String(id) !== req.params.id){
+        return res.status(400).json({error:'Id inválido'});
     }
     const index = items.findIndex(item => item.id === id);
     if (index === -1) {
@@ -124,6 +126,24 @@ app.delete('/api/items/:id', (req,res) => {
   items.splice(index, 1);
   res.status(204).send();
 });
-app.listen(PORT, () => {
-    console.log(`API a executar em http://localhost:${PORT}`);
+
+//A partir daqui foi gerado com IA
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({
+            error: 'JSON inválido'
+        });
+    }
+
+    next(err);
+});
+
+/*Recurso 2 */
+const livros=[];
+
+
+app.use((req, res) => {
+    res.status(404).json({
+        error: 'Rota não encontrada'
+    });
 });
