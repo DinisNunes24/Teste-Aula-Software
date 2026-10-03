@@ -20,6 +20,7 @@ app.get('/api/items', (req, res) => {
         const term = name.trim().toLowerCase();
         result=result.filter(item=>
             item.name.toLowerCase().includes(term)
+
         );
     }
 
@@ -58,11 +59,11 @@ app.get('/api/items', (req, res) => {
     res.status(200).json(result);
 });
 
-
 app.get(`/api/items/:id`, (req, res) => {
     const id = Number(req.params.id);
 
     if(!Number.isInteger(id)||id<=0||String(id) !== req.params.id){
+
         return res.status(400).json({
             error: 'id inválido'
         });
@@ -78,7 +79,9 @@ app.get(`/api/items/:id`, (req, res) => {
 });
 
 app.post('/api/items', (req, res) => {
+
     const { name} = req.body||{};
+
 
     if(typeof name!=='string'||name.trim()===''){
         return res.status(400).json({ error: 'O campo name é obrigatório'});
@@ -91,12 +94,16 @@ app.post('/api/items', (req, res) => {
     items.push(newItem);
 
     res.status(201).location(`/api/items/${newItem.id}`).json(newItem);
+
 })
 
 app.put('/api/items/:id', (req, res) => {
     const id = Number(req.params.id);
 
+
     if(!Number.isInteger(id)||id<=0||String(id) !== req.params.id){
+
+
         return res.status(400).json({ error: 'Id inválido' });
     }
     const item = items.find(item=>item.id===id);
@@ -115,8 +122,10 @@ app.put('/api/items/:id', (req, res) => {
 app.delete('/api/items/:id', (req,res) => {
     const id = Number(req.params.id);
 
+
     if(!Number.isInteger(id)||id<=0||String(id) !== req.params.id){
         return res.status(400).json({error:'Id inválido'});
+
     }
     const index = items.findIndex(item => item.id === id);
     if (index === -1) {
@@ -147,3 +156,8 @@ app.use((req, res) => {
         error: 'Rota não encontrada'
     });
 });
+
+app.listen(PORT, () => {
+    console.log(`API a executar em http://localhost:${PORT}`);
+});
+
